@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 
@@ -74,6 +75,20 @@ const Posting = () => {
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState("");
   const [Heart, setHeart] = useState(0);
+  const navigater = useNavigate();
+
+  const [admin, setAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const checkAdmin = async () => {
+    const res = await fetch("http://localhost:5001/api/login/checkAdmin", {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await res.json();
+    setAdmin(data["isAdmin"]);
+    setLoading(false);
+  };
 
   const fetchData = async () => {
     const res = await fetch(`http://localhost:5001/api/posts/post/${PostId}`);
@@ -91,6 +106,7 @@ const Posting = () => {
 
   useEffect(() => {
     fetchData();
+    checkAdmin();
   }, []);
 
   useEffect(() => {
@@ -100,6 +116,15 @@ const Posting = () => {
   }, [post]);
 
   useEffect(() => {
+    console.log("안녕!");
+    if (!loading) {
+      if (admin) {
+        console.log("박동현");
+      }
+    }
+  }, [admin, loading]);
+
+  useEffect(() => {
     console.log("댓글 : ", comments);
   }, [comments]);
 
@@ -107,6 +132,27 @@ const Posting = () => {
     <>
       {post ? (
         <>
+          {admin && (
+            <button
+              onClick={async () => {
+                const choice = prompt(
+                  `삭제하기 위해 '${PostId}:${post.Title}'를 입력하세요`
+                );
+                if (choice === `${PostId}:${post.Title}`) {
+                  const res = await fetch(
+                    `http://localhost:5001/api/posts/delete/posting/${PostId}`
+                  );
+
+                  alert("성공적으로 삭제했습니다🔥");
+                  navigater("/posts");
+                } else {
+                  alert("삭제가 취소되었습니다!");
+                }
+              }}
+            >
+              삭제
+            </button>
+          )}
           <ArticleWrapper>
             <Title>{post.Title}</Title>
             <AuthorAndDate>
@@ -165,6 +211,24 @@ const Posting = () => {
                       <div>{item.Name}</div>
                       <div>{item.Content}</div>
                       <div>{item.Time}</div>
+                      {admin && (
+                        <button
+                          onClick={async () => {
+                            const choice =
+                              window.confirm("🫨 삭제하시겠습니까?");
+                            if (choice) {
+                              const res = await fetch(
+                                `http://localhost:5001/api/posts/delete/comment/${item.CommentId}`
+                              );
+                              console.log("성공적으로 삭제했습니다🔥");
+                            } else {
+                              alert("삭제가 취소되었습니다!");
+                            }
+                          }}
+                        >
+                          삭제
+                        </button>
+                      )}
                     </li>
                   );
                 })}

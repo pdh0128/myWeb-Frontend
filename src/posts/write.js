@@ -110,11 +110,11 @@ const Write = () => {
   useEffect(() => {
     console.log("안녕!");
     if (!loading) {
-      console.log("admin : ", admin);
       if (admin) {
         console.log("박동현");
       } else {
-        navigater("/posts");
+        alert("🔥 로그인 🔥");
+        navigater("/login");
         console.log("비동현");
       }
     }
