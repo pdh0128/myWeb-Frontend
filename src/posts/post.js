@@ -8,6 +8,7 @@ const Post = () => {
     <Routes>
       <Route path="/" element={<PostList />} />
       <Route path="/write" element={<Write />} />
+      <Route path="/write/:PostId" element={<Write />} />
       <Route path="/:PostId" element={<Posting />} />
     </Routes>
   );

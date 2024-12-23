@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Container = styled.div`
   display: flex;
@@ -90,6 +90,8 @@ const Write = () => {
   const [admin, setAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const postid = useParams().PostId;
+
   const imageFilePattern = /([a-zA-Z0-9_\-%.=&?\/:]*)\.(jpg|jpeg|png|gif)$/;
   const author = "박동현";
   const navigater = useNavigate();
@@ -103,10 +105,20 @@ const Write = () => {
     setAdmin(data["isAdmin"]);
     setLoading(false);
   };
-
+  const readPost = async () => {
+    const res = await fetch(`http://localhost:5001/api/posts/read/${postid}`);
+    let data = await res.json();
+    data = data["post"];
+    setTitle(data["Title"]);
+    setContent(data["Content"]);
+  };
   useEffect(() => {
     checkAdmin();
+    if (postid != undefined) {
+      readPost();
+    }
   }, []);
+
   useEffect(() => {
     console.log("안녕!");
     if (!loading) {
@@ -146,25 +158,47 @@ const Write = () => {
           <Button
             onClick={async () => {
               if (content) {
-                if (!title) setTitle("제목 없음");
-                const res = await fetch(
-                  "http://localhost:5001/api/posts/write",
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      author: author,
-                      title: title,
-                      content: content,
-                    }),
-                  }
-                );
-                console.log(author, title, content);
-                const data = await res.json();
-                alert("🔥출간했어요🔥");
-                navigater("/posts");
+                if (postid != undefined) {
+                  const res = await fetch(
+                    "http://localhost:5001/api/posts/write/update",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        Title: title,
+                        Content: content,
+                        PostId: postid,
+                      }),
+                    }
+                  );
+                  const data = await res.json();
+                  console.log(data);
+                  alert("🔥수정했어요🔥");
+                  navigater(`/posts/${postid}`);
+                } else {
+                  if (!title) setTitle("제목 없음");
+                  const res = await fetch(
+                    "http://localhost:5001/api/posts/write",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        author: author,
+                        title: title,
+                        content: content,
+                      }),
+                    }
+                  );
+
+                  console.log(author, title, content);
+                  const data = await res.json();
+                  alert("🔥출간했어요🔥");
+                  navigater("/posts");
+                }
               } else {
                 alert("내용을 작성해주세요!");
               }

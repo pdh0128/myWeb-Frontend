@@ -133,25 +133,33 @@ const Posting = () => {
       {post ? (
         <>
           {admin && (
-            <button
-              onClick={async () => {
-                const choice = prompt(
-                  `삭제하기 위해 '${PostId}:${post.Title}'를 입력하세요`
-                );
-                if (choice === `${PostId}:${post.Title}`) {
-                  const res = await fetch(
-                    `http://localhost:5001/api/posts/delete/posting/${PostId}`
+            <>
+              <button
+                onClick={async () => {
+                  const choice = prompt(
+                    `삭제하기 위해 '${PostId}:${post.Title}'를 입력하세요`
                   );
-
-                  alert("성공적으로 삭제했습니다🔥");
-                  navigater("/posts");
-                } else {
-                  alert("삭제가 취소되었습니다!");
-                }
-              }}
-            >
-              삭제
-            </button>
+                  if (choice === `${PostId}:${post.Title}`) {
+                    const res = await fetch(
+                      `http://localhost:5001/api/posts/delete/posting/${PostId}`
+                    );
+                    alert("성공적으로 삭제했습니다🔥");
+                    navigater("/posts");
+                  } else {
+                    alert("삭제가 취소되었습니다!");
+                  }
+                }}
+              >
+                삭제
+              </button>
+              <button
+                onClick={() => {
+                  navigater(`/posts/write/${PostId}`);
+                }}
+              >
+                수정
+              </button>
+            </>
           )}
           <ArticleWrapper>
             <Title>{post.Title}</Title>
@@ -212,22 +220,24 @@ const Posting = () => {
                       <div>{item.Content}</div>
                       <div>{item.Time}</div>
                       {admin && (
-                        <button
-                          onClick={async () => {
-                            const choice =
-                              window.confirm("🫨 삭제하시겠습니까?");
-                            if (choice) {
-                              const res = await fetch(
-                                `http://localhost:5001/api/posts/delete/comment/${item.CommentId}`
-                              );
-                              console.log("성공적으로 삭제했습니다🔥");
-                            } else {
-                              alert("삭제가 취소되었습니다!");
-                            }
-                          }}
-                        >
-                          삭제
-                        </button>
+                        <>
+                          <button
+                            onClick={async () => {
+                              const choice =
+                                window.confirm("🫨 삭제하시겠습니까?");
+                              if (choice) {
+                                const res = await fetch(
+                                  `http://localhost:5001/api/posts/delete/comment/${item.CommentId}`
+                                );
+                                console.log("성공적으로 삭제했습니다🔥");
+                              } else {
+                                alert("삭제가 취소되었습니다!");
+                              }
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </>
                       )}
                     </li>
                   );
