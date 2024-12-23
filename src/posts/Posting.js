@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
+import ReactMarkdown from "react-markdown";
 
 const ArticleWrapper = styled.article`
   font-family: "Times New Roman", serif;
@@ -166,7 +167,11 @@ const Posting = () => {
             <AuthorAndDate>
               <strong>By {post.Author}</strong> |{" "}
             </AuthorAndDate>
-            <Content>{post.Content}</Content>
+
+            <Content>
+              <ReactMarkdown>{post.Content}</ReactMarkdown>
+            </Content>
+
             <HeartSection>❤️ {Heart} Likes</HeartSection>
             <LikeButton onClick={upHeart}>Like</LikeButton>
           </ArticleWrapper>
@@ -189,27 +194,37 @@ const Posting = () => {
                   );
                   let data = await res.json();
                   data = data["user"][0];
-                  const userId = data["UserId"];
-                  const name = data["Name"];
-                  const content = comment;
-                  console.log(PostId, userId, name, content);
+                  if (data != undefined) {
+                    const userId = data["UserId"];
+                    const name = data["Name"];
+                    const content = comment;
+                    console.log(
+                      "게시물 정보 : ",
+                      PostId,
+                      userId,
+                      name,
+                      content
+                    );
 
-                  const res1 = await fetch(
-                    "http://localhost:5001/api/posts/comment",
-                    {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        PostId: PostId,
-                        UserId: userId,
-                        Name: name,
-                        Content: content,
-                      }),
-                    }
-                  );
-                  fetchData();
+                    const res1 = await fetch(
+                      "http://localhost:5001/api/posts/comment",
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          PostId: PostId,
+                          UserId: userId,
+                          Name: name,
+                          Content: content,
+                        }),
+                      }
+                    );
+                    fetchData();
+                  } else {
+                    alert("로그인이 안되어있어요 😥");
+                  }
                 }}
               />
               <ul>

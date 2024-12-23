@@ -125,8 +125,8 @@ const Write = () => {
       if (admin) {
         console.log("박동현");
       } else {
-        alert("🔥 로그인 🔥");
-        navigater("/login");
+        alert("🔥 ~박동현만 작성할 수 있습니다~ 🔥");
+        navigater("/posts");
         console.log("비동현");
       }
     }
@@ -154,7 +154,13 @@ const Write = () => {
           value={content}
         />
         <Footer>
-          <Button>나가기</Button>
+          <Button
+            onClick={() => {
+              navigater("/posts");
+            }}
+          >
+            나가기
+          </Button>
           <Button
             onClick={async () => {
               if (content) {

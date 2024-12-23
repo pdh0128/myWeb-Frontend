@@ -55,36 +55,80 @@ const NoPostsMessage = styled.p`
 
 const PostList = () => {
   const [list, setList] = useState([]);
+  const [search, setSearch] = useState("");
+  const navigater = useNavigate();
 
   const fetchData = async () => {
     const res = await fetch("http://localhost:5001/api/posts");
     const data = await res.json();
     setList(data.posts);
   };
-  const navigater = useNavigate();
+
+  const searchData = async (search) => {
+    const res = await fetch(`http://localhost:5001/api/posts/search/${search}`);
+    const data = await res.json();
+    setList(data.posts);
+  };
+
   useEffect(() => {
-    fetchData();
+    const savedSearch = sessionStorage.getItem("search");
+    if (savedSearch) {
+      setSearch(savedSearch);
+    } else {
+      fetchData();
+    }
   }, []);
 
+  useEffect(() => {
+    if (search) {
+      searchData(search);
+    } else {
+      fetchData();
+    }
+  }, [search]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    sessionStorage.setItem("search", search);
+    setSearch(search);
+  };
+
   return (
-    <Container>
-      {list && list.length > 0 ? (
-        list.map((item) => (
-          <PostCard
-            key={item.PostId}
-            onClick={() => {
-              navigater(`/posts/${item.PostId}`);
+    <>
+      <button
+        onClick={() => {
+          navigater("/posts/write");
+        }}
+      >
+        글 작성
+      </button>
+      <Container>
+        <form onSubmit={handleSearchSubmit}>
+          <input
+            placeholder="검색"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
             }}
-          >
-            <Title>{item.Title}</Title>
-            <Author>By {item.Author}</Author>
-            <Content>{item.Content}</Content>
-          </PostCard>
-        ))
-      ) : (
-        <NoPostsMessage>No posts available</NoPostsMessage>
-      )}
-    </Container>
+          />
+        </form>
+        {list && list.length > 0 ? (
+          list.map((item) => (
+            <PostCard
+              key={item.PostId}
+              onClick={() => {
+                navigater(`/posts/${item.PostId}`);
+              }}
+            >
+              <Title>{item.Title}</Title>
+              <Author>By {item.Author}</Author>
+            </PostCard>
+          ))
+        ) : (
+          <NoPostsMessage>No posts available</NoPostsMessage>
+        )}
+      </Container>
+    </>
   );
 };
 
