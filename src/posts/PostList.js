@@ -52,11 +52,29 @@ const NoPostsMessage = styled.p`
   margin-top: 20px;
   font-style: italic;
 `;
+const useDebounce = (value, delay) => {
+  //디바운스를 하기 위한 커스텀 훅
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 const PostList = () => {
   const [list, setList] = useState([]);
   const [search, setSearch] = useState("");
   const navigater = useNavigate();
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const fetchData = async () => {
     const res = await fetch("http://localhost:5001/api/posts");
@@ -72,7 +90,8 @@ const PostList = () => {
 
   useEffect(() => {
     const savedSearch = sessionStorage.getItem("search");
-    if (savedSearch) {
+    console.log(savedSearch);
+    if (savedSearch && savedSearch !== "") {
       setSearch(savedSearch);
     } else {
       fetchData();
@@ -80,18 +99,15 @@ const PostList = () => {
   }, []);
 
   useEffect(() => {
-    if (search) {
-      searchData(search);
-    } else {
+    // 검색어가 비어 있으면 데이터를 초기화
+    if (debouncedSearch.trim() === "") {
       fetchData();
+    } else {
+      searchData(debouncedSearch);
     }
-  }, [search]);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    sessionStorage.setItem("search", search);
-    setSearch(search);
-  };
+    sessionStorage.setItem("search", debouncedSearch.trim());
+  }, [debouncedSearch]);
 
   return (
     <>
@@ -103,15 +119,14 @@ const PostList = () => {
         글 작성
       </button>
       <Container>
-        <form onSubmit={handleSearchSubmit}>
-          <input
-            placeholder="검색"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
-          />
-        </form>
+        <input
+          placeholder="검색"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+          }}
+        />
+
         {list && list.length > 0 ? (
           list.map((item) => (
             <PostCard
