@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { solarizedlight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const ArticleWrapper = styled.article`
   font-family: "Times New Roman", serif;
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  line-height: 1.8; /* 줄 간격을 늘려서 읽기 좋게 설정 */
+  line-height: 1.8;
   background-color: #f9f9f9;
   color: #333;
   border-left: 5px solid #1e90ff;
@@ -59,12 +61,74 @@ const LikeButton = styled.button`
   }
 `;
 
-const NoPostMessage = styled.div`
-  text-align: center;
-  font-size: 1.2rem;
-  color: #666;
+const AdminButton = styled.button`
+  background-color: #ff6347;
+  color: white;
+  padding: 8px 16px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #ff4500;
+  }
 `;
+
 const CommentWrapper = styled.div`
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+`;
+
+const CommentInput = styled.input`
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+`;
+
+const CommentButton = styled.button`
+  background-color: #1e90ff;
+  color: white;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #4682b4;
+  }
+`;
+
+const CommentList = styled.ul`
+  margin-top: 20px;
+  list-style-type: none;
+  padding-left: 0;
+`;
+
+const CommentItem = styled.li`
+  background-color: #fff;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+`;
+
+const CommentActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const NoPostMessage = styled.div`
   text-align: center;
   font-size: 1.2rem;
   color: #666;
@@ -117,10 +181,9 @@ const Posting = () => {
   }, [post]);
 
   useEffect(() => {
-    console.log("안녕!");
     if (!loading) {
       if (admin) {
-        console.log("박동현");
+        console.log("관리자 로그인됨");
       }
     }
   }, [admin, loading]);
@@ -135,7 +198,7 @@ const Posting = () => {
         <>
           {admin && (
             <>
-              <button
+              <AdminButton
                 onClick={async () => {
                   const choice = prompt(
                     `삭제하기 위해 '${PostId}:${post.Title}'를 입력하세요`
@@ -152,14 +215,14 @@ const Posting = () => {
                 }}
               >
                 삭제
-              </button>
-              <button
+              </AdminButton>
+              <AdminButton
                 onClick={() => {
                   navigater(`/posts/write/${PostId}`);
                 }}
               >
                 수정
-              </button>
+              </AdminButton>
             </>
           )}
           <ArticleWrapper>
@@ -169,7 +232,31 @@ const Posting = () => {
             </AuthorAndDate>
 
             <Content>
-              <ReactMarkdown>{post.Content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  img: ({ node, ...props }) => (
+                    <img style={{ maxWidth: "100%" }} {...props} alt="" />
+                  ),
+                  code: ({ node, inline, className, children, ...props }) => {
+                    const language = className?.replace(/language-/, "");
+                    return !inline ? (
+                      <SyntaxHighlighter
+                        language={language}
+                        style={solarizedlight}
+                        PreTag="div"
+                      >
+                        {String(children).replace(/\n$/, "")}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {post.Content}
+              </ReactMarkdown>
             </Content>
 
             <HeartSection>❤️ {Heart} Likes</HeartSection>
@@ -177,15 +264,16 @@ const Posting = () => {
           </ArticleWrapper>
           <CommentWrapper>
             <form>
-              <input
+              <CommentInput
                 placeholder="댓글 달기"
                 onChange={(e) => setComment(e.target.value)}
                 value={comment}
               />
-              <button
-                type="submmit"
+              <CommentButton
+                type="submit"
                 onClick={async (e) => {
                   e.preventDefault();
+
                   const res = await fetch(
                     "http://localhost:5001/api/login/userInfo",
                     {
@@ -198,13 +286,6 @@ const Posting = () => {
                     const userId = data["UserId"];
                     const name = data["Name"];
                     const content = comment;
-                    console.log(
-                      "게시물 정보 : ",
-                      PostId,
-                      userId,
-                      name,
-                      content
-                    );
 
                     const res1 = await fetch(
                       "http://localhost:5001/api/posts/comment",
@@ -221,21 +302,26 @@ const Posting = () => {
                         }),
                       }
                     );
+                    setComment("");
                     fetchData();
                   } else {
                     alert("로그인이 안되어있어요 😥");
                   }
                 }}
-              />
-              <ul>
+              >
+                댓글 남기기
+              </CommentButton>
+              <CommentList>
                 {comments.map((item) => {
                   return (
-                    <li key={item.CommentId}>
-                      <div>{item.Name}</div>
+                    <CommentItem key={item.CommentId}>
+                      <div>
+                        <strong>{item.Name}</strong>
+                      </div>
                       <div>{item.Content}</div>
                       <div>{item.Time}</div>
                       {admin && (
-                        <>
+                        <CommentActions>
                           <button
                             onClick={async () => {
                               const choice =
@@ -245,6 +331,7 @@ const Posting = () => {
                                   `http://localhost:5001/api/posts/delete/comment/${item.CommentId}`
                                 );
                                 console.log("성공적으로 삭제했습니다🔥");
+                                fetchData(); // 댓글 삭제 후 다시 데이터를 불러옴
                               } else {
                                 alert("삭제가 취소되었습니다!");
                               }
@@ -252,12 +339,12 @@ const Posting = () => {
                           >
                             삭제
                           </button>
-                        </>
+                        </CommentActions>
                       )}
-                    </li>
+                    </CommentItem>
                   );
                 })}
-              </ul>
+              </CommentList>
             </form>
           </CommentWrapper>
         </>

@@ -52,8 +52,44 @@ const NoPostsMessage = styled.p`
   margin-top: 20px;
   font-style: italic;
 `;
+
+const Heart = styled.span`
+  font-size: 20px;
+  color: #ff4d4f;
+  cursor: pointer;
+`;
+
+const Button = styled.button`
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 10px 0;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 20px;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
 const useDebounce = (value, delay) => {
-  //디바운스를 하기 위한 커스텀 훅
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
@@ -90,7 +126,6 @@ const PostList = () => {
 
   useEffect(() => {
     const savedSearch = sessionStorage.getItem("search");
-    console.log(savedSearch);
     if (savedSearch && savedSearch !== "") {
       setSearch(savedSearch);
     } else {
@@ -99,27 +134,25 @@ const PostList = () => {
   }, []);
 
   useEffect(() => {
-    // 검색어가 비어 있으면 데이터를 초기화
     if (debouncedSearch.trim() === "") {
       fetchData();
     } else {
       searchData(debouncedSearch);
     }
-
     sessionStorage.setItem("search", debouncedSearch.trim());
   }, [debouncedSearch]);
 
   return (
     <>
-      <button
+      <Button
         onClick={() => {
           navigater("/posts/write");
         }}
       >
         글 작성
-      </button>
+      </Button>
       <Container>
-        <input
+        <SearchInput
           placeholder="검색"
           value={search}
           onChange={(e) => {
@@ -137,10 +170,13 @@ const PostList = () => {
             >
               <Title>{item.Title}</Title>
               <Author>By {item.Author}</Author>
+              <div>
+                <Heart>❤️</Heart> {item.Heart}
+              </div>
             </PostCard>
           ))
         ) : (
-          <NoPostsMessage>No posts available</NoPostsMessage>
+          <NoPostsMessage>게시물이 없거나 불러오는 중입니다!</NoPostsMessage>
         )}
       </Container>
     </>

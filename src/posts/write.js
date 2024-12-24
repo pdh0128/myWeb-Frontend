@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { solarizedlight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const Container = styled.div`
   display: flex;
@@ -219,7 +221,31 @@ const Write = () => {
       <PreviewContainer>
         <h2>{title || "제목 없음"}</h2>
         <hr />
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <ReactMarkdown
+          components={{
+            img: ({ node, ...props }) => (
+              <img style={{ maxWidth: "100%" }} {...props} alt="" />
+            ),
+            code: ({ node, inline, className, children, ...props }) => {
+              const language = className?.replace(/language-/, "");
+              return !inline ? (
+                <SyntaxHighlighter
+                  language={language}
+                  style={solarizedlight}
+                  PreTag="div"
+                >
+                  {String(children).replace(/\n$/, "")}
+                </SyntaxHighlighter>
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+          }}
+        >
+          {content}
+        </ReactMarkdown>
       </PreviewContainer>
     </Container>
   );
